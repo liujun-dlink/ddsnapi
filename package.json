@@ -1,0 +1,14 @@
+{
+  "name": "ddsnapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./index",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild"
+  },
+  "gypfile": true,
+  "author": "",
+  "license": "ISC",
+  "gypfile": true
+}
