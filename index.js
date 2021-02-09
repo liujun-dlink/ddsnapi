@@ -1,2 +1,2 @@
-const ddsnapi = require("./build/Release/ddsnapi").ddsnapi;
+const ddsnapi = require("./build/Release/ddsnapi");
 module.exports.ddsnapi = ddsnapi;
