@@ -1,7 +1,7 @@
-#include "node_api.h"
+#include <node_api.h>
 #include <stdlib.h>
-#include "libDB.h"
 #include <string.h>
+#include "libDB.h"
 
 void catch_error_libDB(napi_env env, napi_status status) {
     if (status != napi_ok)
@@ -2529,10 +2529,10 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     int nUpdateBetaFw;
     catch_error_libDB(env, napi_get_value_int32(env, argv[4], &nUpdateBetaFw));
     //执行so函数
-    char* info = analyzeFirmwareInfo(nMajor, nMinor, nRev, strFirmwareInfoFromFOTA, nUpdateBetaFw);
+    char* result = analyzeFirmwareInfo(nMajor, nMinor, nRev, strFirmwareInfoFromFOTA, nUpdateBetaFw);
     //转类型
     napi_value world;
-    catch_error_libDB(env, napi_create_string_utf8(env, info, NAPI_AUTO_LENGTH, &world));
+    catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
     napi_value* callbackParams = &world;
     size_t callbackArgc = 1;
@@ -2553,9 +2553,9 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     //获取js-callback函数
     catch_error_libDB(env, napi_acquire_threadsafe_function(addon_data->tsfn));
     //执行so函数
-    char* info = analyzeFirmwareInfo(addon_data->nMajor, addon_data->nMinor, addon_data->nRev, addon_data->strFirmwareInfoFromFOTA, addon_data->nUpdateBetaFw);
-    char* v = (char*)malloc(sizeof(char) * (strlen(info) + 1));
-    strcpy(v, info);
+    char* result = analyzeFirmwareInfo(addon_data->nMajor, addon_data->nMinor, addon_data->nRev, addon_data->strFirmwareInfoFromFOTA, addon_data->nUpdateBetaFw);
+    char* v = (char*)malloc(sizeof(char) * (strlen(result) + 1));
+    strcpy(v, result);
     // 调用js-callback函数
     catch_error_libDB(env, napi_call_threadsafe_function(
         addon_data->tsfn,                       // js-callback函数
@@ -2663,504 +2663,504 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     ));
     return NULL;
 }
-/**************************************init**************************************/
-napi_value init(napi_env env, napi_value exports)
-{
-    /***************************getHWVersion**************************/
-    // 获取性能数据
-    napi_property_descriptor getHWVersionSync = {
-        "getHWVersionSync",
-        NULL,
-        get_hw_version_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getHWVersionSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getHWVersion = {
-        "getHWVersion",
-        NULL,
-        get_hw_version,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getHWVersion
-    );
-    /***************************getNCVersion**************************/
-    // 获取性能数据
-    napi_property_descriptor getNCVersionSync = {
-        "getNCVersionSync",
-        NULL,
-        get_nc_version_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getNCVersionSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getNCVersion = {
-        "getNCVersion",
-        NULL,
-        get_nc_version,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getNCVersion
-    );
-    /***************************getFOTASetting**************************/
-    // 获取性能数据
-    napi_property_descriptor getFOTASettingSync = {
-        "getFOTASettingSync",
-        NULL,
-        get_fota_setting_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFOTASettingSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getFOTASetting = {
-        "getFOTASetting",
-        NULL,
-        get_fota_setting,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFOTASetting
-    );
-    /***************************getFirmwareVersion**************************/
-    // 获取性能数据
-    napi_property_descriptor getFirmwareVersionSync = {
-        "getFirmwareVersionSync",
-        NULL,
-        get_firmware_version_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareVersionSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getFirmwareVersion = {
-        "getFirmwareVersion",
-        NULL,
-        get_firmware_version,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareVersion
-    );
-    /***************************getFirmwareVersionFull**************************/
-    // 获取性能数据
-    napi_property_descriptor getFirmwareVersionFullSync = {
-        "getFirmwareVersionFullSync",
-        NULL,
-        get_firmware_version_full_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareVersionFullSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getFirmwareVersionFull = {
-        "getFirmwareVersionFull",
-        NULL,
-        get_firmware_version_full,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareVersionFull
-    );
-    /***************************getFirmwareInfo**************************/
-// 获取性能数据
-    napi_property_descriptor getFirmwareInfoSync = {
-        "getFirmwareInfoSync",
-        NULL,
-        get_firmware_info_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareInfoSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getFirmwareInfo = {
-        "getFirmwareInfo",
-        NULL,
-        get_firmware_info,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareInfo
-    );
-    /***************************getDeviceUUID**************************/
-// 获取性能数据
-    napi_property_descriptor getDeviceUUIDSync = {
-        "getDeviceUUIDSync",
-        NULL,
-        get_device_uuid_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getDeviceUUIDSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getDeviceUUID = {
-        "getDeviceUUID",
-        NULL,
-        get_device_uuid,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getDeviceUUID
-    );
-    /***************************getFirmwareUpgradeStatus**************************/
-// 获取性能数据
-    napi_property_descriptor getFirmwareUpgradeStatusSync = {
-        "getFirmwareUpgradeStatusSync",
-        NULL,
-        get_firmware_upgrade_status_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareUpgradeStatusSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getFirmwareUpgradeStatus = {
-        "getFirmwareUpgradeStatus",
-        NULL,
-        get_firmware_upgrade_status,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFirmwareUpgradeStatus
-    );
-    /***************************getFOTAUpdateStatus**************************/
-    // 获取性能数据
-    napi_property_descriptor getFOTAUpdateStatusSync = {
-        "getFOTAUpdateStatusSync",
-        NULL,
-        get_fota_update_status_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFOTAUpdateStatusSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor getFOTAUpdateStatus = {
-        "getFOTAUpdateStatus",
-        NULL,
-        get_fota_update_status,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &getFOTAUpdateStatus
-    );
-    /***************************setFOTASetting**************************/
-    // 获取性能数据
-    napi_property_descriptor setFOTASettingSync = {
-        "setFOTASettingSync",
-        NULL,
-        set_fota_setting_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &setFOTASettingSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor setFOTASetting = {
-        "setFOTASetting",
-        NULL,
-        set_fota_setting,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &setFOTASetting
-    );
-    /***************************setFOTAUpdateStatus**************************/
-// 获取性能数据
-    napi_property_descriptor setFOTAUpdateStatusSync = {
-        "setFOTAUpdateStatusSync",
-        NULL,
-        set_fota_update_status_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &setFOTAUpdateStatusSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor setFOTAUpdateStatus = {
-        "setFOTAUpdateStatus",
-        NULL,
-        set_fota_update_status,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &setFOTAUpdateStatus
-    );
-    /***************************setFirmwareUpgradeStatus**************************/
-// 获取性能数据
-    napi_property_descriptor setFirmwareUpgradeStatusSync = {
-        "setFirmwareUpgradeStatusSync",
-        NULL,
-        set_firmware_upgrade_status_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &setFirmwareUpgradeStatusSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor setFirmwareUpgradeStatus = {
-        "setFirmwareUpgradeStatus",
-        NULL,
-        set_firmware_upgrade_status,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &setFirmwareUpgradeStatus
-    );
-    /***************************analyzeFirmwareInfo**************************/
-// 获取性能数据
-    napi_property_descriptor analyzeFirmwareInfoSync = {
-        "analyzeFirmwareInfoSync",
-        NULL,
-        analyze_firmware_info_sync,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &analyzeFirmwareInfoSync
-    );
-
-    // 获取性能数据
-    napi_property_descriptor analyzeFirmwareInfo = {
-        "analyzeFirmwareInfo",
-        NULL,
-        analyze_firmware_info,
-        NULL,
-        NULL,
-        NULL,
-        napi_default,
-        NULL
-    };
-    //暴露接口
-    napi_define_properties(
-        env,
-        exports,
-        1,
-        &analyzeFirmwareInfo
-    );
-    return exports;
-}
-
-NAPI_MODULE(NODE_GYP_MODULE_NAME, init);
+///**************************************init**************************************/
+//napi_value init(napi_env env, napi_value exports)
+//{
+//    /***************************getHWVersion**************************/
+//    // 获取性能数据
+//    napi_property_descriptor getHWVersionSync = {
+//        "getHWVersionSync",
+//        NULL,
+//        get_hw_version_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getHWVersionSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getHWVersion = {
+//        "getHWVersion",
+//        NULL,
+//        get_hw_version,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getHWVersion
+//    );
+//    /***************************getNCVersion**************************/
+//    // 获取性能数据
+//    napi_property_descriptor getNCVersionSync = {
+//        "getNCVersionSync",
+//        NULL,
+//        get_nc_version_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getNCVersionSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getNCVersion = {
+//        "getNCVersion",
+//        NULL,
+//        get_nc_version,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getNCVersion
+//    );
+//    /***************************getFOTASetting**************************/
+//    // 获取性能数据
+//    napi_property_descriptor getFOTASettingSync = {
+//        "getFOTASettingSync",
+//        NULL,
+//        get_fota_setting_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFOTASettingSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getFOTASetting = {
+//        "getFOTASetting",
+//        NULL,
+//        get_fota_setting,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFOTASetting
+//    );
+//    /***************************getFirmwareVersion**************************/
+//    // 获取性能数据
+//    napi_property_descriptor getFirmwareVersionSync = {
+//        "getFirmwareVersionSync",
+//        NULL,
+//        get_firmware_version_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareVersionSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getFirmwareVersion = {
+//        "getFirmwareVersion",
+//        NULL,
+//        get_firmware_version,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareVersion
+//    );
+//    /***************************getFirmwareVersionFull**************************/
+//    // 获取性能数据
+//    napi_property_descriptor getFirmwareVersionFullSync = {
+//        "getFirmwareVersionFullSync",
+//        NULL,
+//        get_firmware_version_full_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareVersionFullSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getFirmwareVersionFull = {
+//        "getFirmwareVersionFull",
+//        NULL,
+//        get_firmware_version_full,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareVersionFull
+//    );
+//    /***************************getFirmwareInfo**************************/
+//// 获取性能数据
+//    napi_property_descriptor getFirmwareInfoSync = {
+//        "getFirmwareInfoSync",
+//        NULL,
+//        get_firmware_info_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareInfoSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getFirmwareInfo = {
+//        "getFirmwareInfo",
+//        NULL,
+//        get_firmware_info,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareInfo
+//    );
+//    /***************************getDeviceUUID**************************/
+//// 获取性能数据
+//    napi_property_descriptor getDeviceUUIDSync = {
+//        "getDeviceUUIDSync",
+//        NULL,
+//        get_device_uuid_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getDeviceUUIDSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getDeviceUUID = {
+//        "getDeviceUUID",
+//        NULL,
+//        get_device_uuid,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getDeviceUUID
+//    );
+//    /***************************getFirmwareUpgradeStatus**************************/
+//// 获取性能数据
+//    napi_property_descriptor getFirmwareUpgradeStatusSync = {
+//        "getFirmwareUpgradeStatusSync",
+//        NULL,
+//        get_firmware_upgrade_status_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareUpgradeStatusSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getFirmwareUpgradeStatus = {
+//        "getFirmwareUpgradeStatus",
+//        NULL,
+//        get_firmware_upgrade_status,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFirmwareUpgradeStatus
+//    );
+//    /***************************getFOTAUpdateStatus**************************/
+//    // 获取性能数据
+//    napi_property_descriptor getFOTAUpdateStatusSync = {
+//        "getFOTAUpdateStatusSync",
+//        NULL,
+//        get_fota_update_status_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFOTAUpdateStatusSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor getFOTAUpdateStatus = {
+//        "getFOTAUpdateStatus",
+//        NULL,
+//        get_fota_update_status,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &getFOTAUpdateStatus
+//    );
+//    /***************************setFOTASetting**************************/
+//    // 获取性能数据
+//    napi_property_descriptor setFOTASettingSync = {
+//        "setFOTASettingSync",
+//        NULL,
+//        set_fota_setting_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &setFOTASettingSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor setFOTASetting = {
+//        "setFOTASetting",
+//        NULL,
+//        set_fota_setting,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &setFOTASetting
+//    );
+//    /***************************setFOTAUpdateStatus**************************/
+//// 获取性能数据
+//    napi_property_descriptor setFOTAUpdateStatusSync = {
+//        "setFOTAUpdateStatusSync",
+//        NULL,
+//        set_fota_update_status_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &setFOTAUpdateStatusSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor setFOTAUpdateStatus = {
+//        "setFOTAUpdateStatus",
+//        NULL,
+//        set_fota_update_status,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &setFOTAUpdateStatus
+//    );
+//    /***************************setFirmwareUpgradeStatus**************************/
+//// 获取性能数据
+//    napi_property_descriptor setFirmwareUpgradeStatusSync = {
+//        "setFirmwareUpgradeStatusSync",
+//        NULL,
+//        set_firmware_upgrade_status_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &setFirmwareUpgradeStatusSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor setFirmwareUpgradeStatus = {
+//        "setFirmwareUpgradeStatus",
+//        NULL,
+//        set_firmware_upgrade_status,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &setFirmwareUpgradeStatus
+//    );
+//    /***************************analyzeFirmwareInfo**************************/
+//// 获取性能数据
+//    napi_property_descriptor analyzeFirmwareInfoSync = {
+//        "analyzeFirmwareInfoSync",
+//        NULL,
+//        analyze_firmware_info_sync,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &analyzeFirmwareInfoSync
+//    );
+//
+//    // 获取性能数据
+//    napi_property_descriptor analyzeFirmwareInfo = {
+//        "analyzeFirmwareInfo",
+//        NULL,
+//        analyze_firmware_info,
+//        NULL,
+//        NULL,
+//        NULL,
+//        napi_default,
+//        NULL
+//    };
+//    //暴露接口
+//    napi_define_properties(
+//        env,
+//        exports,
+//        1,
+//        &analyzeFirmwareInfo
+//    );
+//    return exports;
+//}
+//
+//NAPI_MODULE(NODE_GYP_MODULE_NAME, init);
