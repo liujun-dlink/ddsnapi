@@ -15,6 +15,7 @@
 				"libFtpSetting.c",
 				"libHdd.c",
 				"libCLI.c",
+				"libDB.c",
 				"libDatetimeSetting.c"
 			],
 			"link_settings": {
@@ -27,6 +28,7 @@
 					"/lib/dnh/libFtpSetting.so",
 					"/lib/dnh/libHdd.so",
 					"/lib/dnh/libCLI.so",
+					"/lib/dnh/libDB.so",
 					"/lib/dnh/libDatetimeSetting.so"
 				]
 			}
