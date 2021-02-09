@@ -1,2 +1,2 @@
-const addon = require("./build/Release/ddsnapi").addon;
-module.exports.ddsnapi = addon;
+const ddsnapi = require("./build/Release/ddsnapi").ddsnapi;
+module.exports.ddsnapi = ddsnapi;
