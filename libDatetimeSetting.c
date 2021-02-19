@@ -851,11 +851,11 @@ typedef struct
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &enableNTPServer));
     //strServerAddress
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
-    char strServerAddress[++strLength];
+    char* strServerAddress = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], strServerAddress, strLength, &strLength));
     //strDatetime
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
-    char strDatetime[++strLength];
+    char* strDatetime = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], strDatetime, strLength, &strLength));
     //执行so函数
     int result = setDatetime(isPermanent, enableNTPServer, strServerAddress, strDatetime);
@@ -869,6 +869,8 @@ typedef struct
     napi_get_global(env, &global);
     napi_value callbackRs;
     napi_call_function(env, global, argv[4], callbackArgc, callbackParams, &callbackRs);
+    free(strServerAddress);
+    free(strDatetime);
     return world;
 }
 
@@ -978,30 +980,20 @@ void call_js_callback_set_datetime(napi_env env, napi_value js_cb, void* context
     ));
     //获取参数(int isPermanent, int enableNTPServer, char* strServerAddress, char* strDatetime)
     size_t strLength;
-    //isPermanent
-    int isPermanent;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &isPermanent));
-    //enableNTPServer
-    int enableNTPServer;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &enableNTPServer));
-    //strServerAddress
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
-    char strServerAddress[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], strServerAddress, strLength, &strLength));
-    //strDatetime
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
-    char strDatetime[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], strDatetime, strLength, &strLength));
-    // 分配内存空间，在work_complete中会释放
     AddonData_set_datetime* addon_data = (AddonData_set_datetime*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->isPermanent = isPermanent;
-    addon_data->enableNTPServer = enableNTPServer;
-    addon_data->strServerAddress = (char*)malloc(sizeof(char) * (strlen(strServerAddress) + 1));
-    strcpy(addon_data->strServerAddress, strServerAddress);
-    addon_data->strDatetime = (char*)malloc(sizeof(char) * (strlen(strDatetime) +1));
-    strcpy(addon_data->strDatetime, strDatetime);
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &addon_data->isPermanent));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &addon_data->enableNTPServer));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
+    addon_data->strServerAddress = (char*)malloc(sizeof(char) * (strLength + 1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], addon_data->strServerAddress, strLength, &strLength));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
+    addon_data->strDatetime = (char*)malloc(sizeof(char) * (strLength +1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], addon_data->strDatetime, strLength, &strLength));
+    //strServerAddress
+    //strDatetime
+    // 分配内存空间，在work_complete中会释放
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -1080,7 +1072,7 @@ typedef struct
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &isPermanent));
     //strTimezone
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
-    char strTimezone[++strLength];
+    char* strTimezone = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], strTimezone, strLength, &strLength));
     //执行so函数
     int result = setTimezone(isPermanent, strTimezone);
@@ -1094,6 +1086,7 @@ typedef struct
     napi_get_global(env, &global);
     napi_value callbackRs;
     napi_call_function(env, global, argv[2], callbackArgc, callbackParams, &callbackRs);
+    free(strTimezone);
     return world;
 }
 
@@ -1197,21 +1190,18 @@ void call_js_callback_set_timezone(napi_env env, napi_value js_cb, void* context
     ));
     //获取参数(int isPermanent, int enableNTPServer, char* strServerAddress, char* strDatetime)
     size_t strLength;
-    //isPermanent
-    int isPermanent;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &isPermanent));
-    //strTimezone
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
-    char strTimezone[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], strTimezone, strLength, &strLength));
-
     // 分配内存空间，在work_complete中会释放
     AddonData_set_timezone* addon_data = (AddonData_set_timezone*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->isPermanent = isPermanent;
-    addon_data->strTimezone = (char*)malloc(sizeof(char) * (strlen(strTimezone)+1));
-    strcpy(addon_data->strTimezone, strTimezone);
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &addon_data->isPermanent));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
+    addon_data->strTimezone = (char*)malloc(sizeof(char) * (strLength + 1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], addon_data->strTimezone, strLength, &strLength));
+    //isPermanent
+    int isPermanent;
+    //strTimezone
+
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -1311,7 +1301,7 @@ typedef struct
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &startDay));
     //strTimezone
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], NULL, NULL, &strLength));
-    char startTime[++strLength];
+    char* startTime = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], startTime, strLength, &strLength));
     //endMonth
     int endMonth;
@@ -1324,7 +1314,7 @@ typedef struct
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &endDay));
     //endTime
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], NULL, NULL, &strLength));
-    char endTime[++strLength];
+    char* endTime = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], endTime, strLength, &strLength));
     //执行so函数
     int result = setDaylightSaving(isdst,offsetSeconds,startMonth, startWeek, startDay, startTime,endMonth, endWeek, endDay, endTime);
@@ -1338,6 +1328,8 @@ typedef struct
     napi_get_global(env, &global);
     napi_value callbackRs;
     napi_call_function(env, global, argv[10], callbackArgc, callbackParams, &callbackRs);
+    free(startTime);
+    free(endTime);
     return world;
 }
 
@@ -1444,55 +1436,25 @@ void call_js_callback_set_daylight_saving(napi_env env, napi_value js_cb, void* 
     //获取参数(int isdst, int offsetSeconds, int startMonth, int startWeek, int startDay, char* startTime,
 //int endMonth, int endWeek, int endDay, char* endTime)
     size_t strLength;
-    //isdst
-    int isdst;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &isdst));
-    //offsetSeconds
-    int offsetSeconds;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &offsetSeconds));
-    //startMonth
-    int startMonth;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[2], &startMonth));
-    //startWeek
-    int startWeek;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[3], &startWeek));
-    //startDay
-    int startDay;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &startDay));
-    //strTimezone
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], NULL, NULL, &strLength));
-    char startTime[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], startTime, strLength, &strLength));
-    //endMonth
-    int endMonth;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[6], &endMonth));
-    //endWeek
-    int endWeek;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[7], &endWeek));
-    //endDay
-    int endDay;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &endDay));
-    //endTime
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], NULL, NULL, &strLength));
-    char endTime[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], endTime, strLength, &strLength));
-
     // 分配内存空间，在work_complete中会释放
     AddonData_set_daylight_saving* addon_data = (AddonData_set_daylight_saving*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->isdst = isdst;
-    addon_data->offsetSeconds = offsetSeconds;
-    addon_data->startMonth = startMonth;
-    addon_data->startWeek = startWeek;
-    addon_data->startDay = startDay;
-    addon_data->startTime = (char*)malloc(sizeof(char) * (strlen(startTime) +1));
-    strcpy(addon_data->startTime, startTime);
-    addon_data->endMonth = endMonth;
-    addon_data->endWeek = endWeek;
-    addon_data->endDay = endDay;
-    addon_data->endTime = (char*)malloc(sizeof(char) * (strlen(endTime)+1));
-    strcpy(addon_data->endTime, endTime);
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &addon_data->isdst));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &addon_data->offsetSeconds));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[2], &addon_data->startMonth));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[3], &addon_data->startWeek));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &addon_data->startDay));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], NULL, NULL, &strLength));
+    addon_data->startTime = (char*)malloc(sizeof(char) * (strLength +1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], addon_data->startTime, strLength, &strLength));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[6], &addon_data->endMonth));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[7], &addon_data->endWeek));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &addon_data->endDay));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], NULL, NULL, &strLength));
+    addon_data->endTime = (char*)malloc(sizeof(char) * (strLength +1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], addon_data->endTime, strLength, &strLength));
+
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -1578,7 +1540,7 @@ typedef struct
     size_t strLength;
     //strCityId
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    char strCityId[++strLength];
+    char* strCityId = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], strCityId, strLength, &strLength));
     //isDstEnabled
     int isDstEnabled;
@@ -1597,7 +1559,7 @@ typedef struct
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[5], &startDay));
     //strTimezone
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], NULL, NULL, &strLength));
-    char startTime[++strLength];
+    char* startTime = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], startTime, strLength, &strLength));
     //endMonth
     int endMonth;
@@ -1610,7 +1572,7 @@ typedef struct
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[9], &endDay));
     //endTime
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], NULL, NULL, &strLength));
-    char endTime[++strLength];
+    char* endTime = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], endTime, strLength, &strLength));
     //执行so函数
     int result = setCityDatetime(strCityId, isDstEnabled, offsetSeconds, startMonth, startWeek, startDay, startTime, endMonth, endWeek, endDay, endTime);
@@ -1624,6 +1586,9 @@ typedef struct
     napi_get_global(env, &global);
     napi_value callbackRs;
     napi_call_function(env, global, argv[11], callbackArgc, callbackParams, &callbackRs);
+    free(strCityId);
+    free(startTime);
+    free(endTime);
     return world;
 }
 
@@ -1731,61 +1696,28 @@ void call_js_callback_set_city_datetime(napi_env env, napi_value js_cb, void* co
     //获取参数(char* strCityId, int isDstEnabled, int offsetSeconds, int startMonth, int startWeek, int startDay, char* startTime,
      //int endMonth, int endWeek, int endDay, char* endTime)
     size_t strLength;
-    //strCityId
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    char strCityId[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], strCityId, strLength, &strLength));
-    //isDstEnabled
-    int isDstEnabled;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &isDstEnabled));
-    //offsetSeconds
-    int offsetSeconds;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[2], &offsetSeconds));
-    //startMonth
-    int startMonth;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[3], &startMonth));
-    //startWeek
-    int startWeek;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &startWeek));
-    //startDay
-    int startDay;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[5], &startDay));
-    //strTimezone
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], NULL, NULL, &strLength));
-    char startTime[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], startTime, strLength, &strLength));
-    //endMonth
-    int endMonth;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[7], &endMonth));
-    //endWeek
-    int endWeek;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &endWeek));
-    //endDay
-    int endDay;
-    catch_error_get_datetime(env, napi_get_value_int32(env, argv[9], &endDay));
-    //endTime
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], NULL, NULL, &strLength));
-    char endTime[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], endTime, strLength, &strLength));
-
     // 分配内存空间，在work_complete中会释放
     AddonData_set_city_datetime* addon_data = (AddonData_set_city_datetime*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->strCityId = (char*)malloc(sizeof(char) * (strlen(strCityId) + 1));
-    strcpy(addon_data->strCityId, strCityId);
-    addon_data->isDstEnabled = isDstEnabled;
-    addon_data->offsetSeconds = offsetSeconds;
-    addon_data->startMonth = startMonth;
-    addon_data->startWeek = startWeek;
-    addon_data->startDay = startDay;
-    addon_data->startTime = (char*)malloc(sizeof(char) * (strlen(startTime) + 1));
-    strcpy(addon_data->startTime, startTime);
-    addon_data->endMonth = endMonth;
-    addon_data->endWeek = endWeek;
-    addon_data->endDay = endDay;
-    addon_data->endTime = (char*)malloc(sizeof(char) * (strlen(endTime) + 1));
-    strcpy(addon_data->endTime, endTime);
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
+    addon_data->strCityId = (char*)malloc(sizeof(char) * (strLength + 1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], addon_data->strCityId, strLength, &strLength));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &addon_data->isDstEnabled));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[2], &addon_data->offsetSeconds));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[3], &addon_data->startMonth));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &addon_data->startWeek));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[5], &addon_data->startDay));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], NULL, NULL, &strLength));
+    addon_data->startTime = (char*)malloc(sizeof(char) * (strLength + 1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], addon_data->startTime, strLength, &strLength));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[7], &addon_data->endMonth));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &addon_data->endWeek));
+    catch_error_get_datetime(env, napi_get_value_int32(env, argv[9], &addon_data->endDay));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], NULL, NULL, &strLength));
+    addon_data->endTime = (char*)malloc(sizeof(char) * (strLength + 1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], addon_data->endTime, strLength, &strLength));
+
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -1793,7 +1725,7 @@ void call_js_callback_set_city_datetime(napi_env env, napi_value js_cb, void* co
     // JS回调所用的值将被放置在队列中，对于队列中的每个值，最终将调用JS函数
     catch_error_get_datetime(env, napi_create_threadsafe_function(
         env,
-        argv[10],   //JS函数
+        argv[11],   //JS函数
         NULL,
         work_name,
         1,
@@ -1860,7 +1792,7 @@ typedef struct
     size_t strLength;
     //strCityId
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    char strCityId[++strLength];
+    char* strCityId = (char*)malloc((++strLength) * sizeof(char));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], strCityId, strLength, &strLength));
     //执行so函数
     char* result = getCityDst(strCityId);
@@ -1874,6 +1806,7 @@ typedef struct
     napi_get_global(env, &global);
     napi_value callbackRs;
     napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    free(strCityId);
     return world;
 }
 
@@ -1985,16 +1918,13 @@ void call_js_callback_get_city_dst(napi_env env, napi_value js_cb, void* context
     ));
     //获取参数
     size_t strLength;
-    //strCityId
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    char strCityId[++strLength];
-    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], strCityId, strLength, &strLength));
-    // 分配内存空间，在work_complete中会释放
     AddonData_get_city_dst* addon_data = (AddonData_get_city_dst*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->strCityId = (char*)malloc(sizeof(char) * (strlen(strCityId) +1));
-    strcpy(addon_data->strCityId, strCityId);
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
+    addon_data->strCityId = (char*)malloc(sizeof(char) * (strLength +1));
+    catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], addon_data->strCityId, strLength, &strLength));
+    // 分配内存空间，在work_complete中会释放
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
