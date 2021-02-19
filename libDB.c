@@ -1959,29 +1959,15 @@ void call_js_callback_set_fota_setting(napi_env env, napi_value js_cb, void* con
         &work_name
     ));
     //nEnable
-    int nEnable;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &nEnable));
-    //nWeekday
-    int nWeekday;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[1], &nWeekday));
-    //nHour
-    int nHour;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[2], &nHour));
-    //nMinute
-    int nMinute;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[3], &nMinute));
-    //nUpdateBetaFw
-    int nUpdateBetaFw;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[4], &nUpdateBetaFw));
     // 分配内存空间，在work_complete中会释放
     AddonData_set_fota_setting* addon_data = (AddonData_set_fota_setting*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->nEnable = nEnable;
-    addon_data->nWeekday = nWeekday;
-    addon_data->nHour = nHour;
-    addon_data->nMinute = nMinute;
-    addon_data->nUpdateBetaFw = nUpdateBetaFw;
+    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &addon_data->nEnable));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[1], &addon_data->nWeekday));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[2], &addon_data->nHour));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[3], &addon_data->nMinute));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[4], &addon_data->nUpdateBetaFw));
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -2167,8 +2153,11 @@ void call_js_callback_set_fota_update_status(napi_env env, napi_value js_cb, voi
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
     //nStatus
-    int nStatus;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &nStatus));
+    // 分配内存空间，在work_complete中会释放
+    AddonData_set_fota_update_status* addon_data = (AddonData_set_fota_update_status*)malloc(sizeof(*addon_data));
+    addon_data->work = NULL;
+    addon_data->tsfn = NULL;
+    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &addon_data->nStatus));
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
         env,
@@ -2176,11 +2165,6 @@ void call_js_callback_set_fota_update_status(napi_env env, napi_value js_cb, voi
         NAPI_AUTO_LENGTH,
         &work_name
     ));
-    // 分配内存空间，在work_complete中会释放
-    AddonData_set_fota_update_status* addon_data = (AddonData_set_fota_update_status*)malloc(sizeof(*addon_data));
-    addon_data->work = NULL;
-    addon_data->tsfn = NULL;
-    addon_data->nStatus = nStatus;
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -2373,13 +2357,11 @@ void call_js_callback_set_firmware_upgrade_status(napi_env env, napi_value js_cb
         &work_name
     ));
     //nStatus
-    int nStatus;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &nStatus));
-    // 分配内存空间，在work_complete中会释放
     AddonData_set_firmware_upgrade_status* addon_data = (AddonData_set_firmware_upgrade_status*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    addon_data->nStatus = nStatus;
+    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &addon_data->nStatus));
+    // 分配内存空间，在work_complete中会释放
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：
@@ -2523,7 +2505,7 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     catch_error_libDB(env, napi_get_value_int32(env, argv[2], &nRev));
     //strFirmwareInfoFromFOTA
     catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
-    char strFirmwareInfoFromFOTA[++strLength];
+    char strFirmwareInfoFromFOTA = (char*)malloc((++strLength) * sizeof(char));
     catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], strFirmwareInfoFromFOTA, strLength, &strLength));
     //nUpdateBetaFw
     int nUpdateBetaFw;
@@ -2540,6 +2522,7 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     napi_get_global(env, &global);
     napi_value callbackRs;
     napi_call_function(env, global, argv[5], callbackArgc, callbackParams, &callbackRs);
+    free(strFirmwareInfoFromFOTA);
     return world;
 }
 
@@ -2598,34 +2581,27 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     ));
     // 第一个参数：动态链接库的全路径(int nMajor, int nMinor, int nRev, char* strFirmwareInfoFromFOTA, int nUpdateBetaFw)
     size_t strLength;
-    //nMajor
-    int nMajor;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &nMajor));
-    //nMinor
-    int nMinor;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[1], &nMinor));
-    //nRev
-    int nRev;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[2], &nRev));
-    //strFirmwareInfoFromFOTA
-    catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
-    char strFirmwareInfoFromFOTA[++strLength];
-    catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], strFirmwareInfoFromFOTA, strLength, &strLength));
-    //nUpdateBetaFw
-    int nUpdateBetaFw;
-    catch_error_libDB(env, napi_get_value_int32(env, argv[4], &nUpdateBetaFw));
-    // 分配内存空间，在work_complete中会释放
     AddonData_analyze_firmware_info* addon_data = (AddonData_analyze_firmware_info*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
     addon_data->work = NULL;
-    addon_data->nMajor = nMajor;
-    addon_data->nMinor = nMinor;
-    addon_data->nRev = nRev;
-    addon_data->strFirmwareInfoFromFOTA = (char*)malloc(sizeof(char) * (strlen(strFirmwareInfoFromFOTA) + 1));
-    strcpy(addon_data->strFirmwareInfoFromFOTA, strFirmwareInfoFromFOTA);
-    addon_data->strFirmwareInfoFromFOTA = NULL;
-    addon_data->nUpdateBetaFw = nUpdateBetaFw;
+    catch_error_libDB(env, napi_get_value_int32(env, argv[0], &addon_data->nMajor));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[1], &addon_data->nMinor));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[2], &addon_data->nRev));
+    catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
+    addon_data->strFirmwareInfoFromFOTA = (char*)malloc(sizeof(char) * (strLength + 1));
+    catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], addon_data->strFirmwareInfoFromFOTA, strLength, &strLength));
+    catch_error_libDB(env, napi_get_value_int32(env, argv[4], &addon_data->nUpdateBetaFw));
+    //nMajor
+    int nMajor;
+    //nMinor
+    int nMinor;
+    //nRev
+    int nRev;
+    //strFirmwareInfoFromFOTA
+    //nUpdateBetaFw
+    int nUpdateBetaFw;
+    // 分配内存空间，在work_complete中会释放
     // 把js函数变成任意线程都可以执行的函数
     // 这样就可以在开出来的子线程中调用它了
     // napi_create_threadsafe_function函数作用：

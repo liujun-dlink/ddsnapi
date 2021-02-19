@@ -1,16 +1,17 @@
 // libUtilityTar
 #include <node_api.h>
+#include <stdlib.h>
 #include "libUtilityTar.h"
 
-/*
+/**
  * 公开napi方法
  */
-//#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
+#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
 
-/*
+/**
  * 捕获异常
  */
-void catch_error_utar(napi_env env, napi_status status) {
+void catch_error_utilityTar(napi_env env, napi_status status) {
     if (status != napi_ok)
     {
         // napi_extended_error_info是一个结构体，包含如下信息
@@ -38,13 +39,13 @@ void catch_error_utar(napi_env env, napi_status status) {
     }
 }
 
-/*
+/**
  * 参数个数检查
  */
-void checkParams_utar(napi_env env, napi_callback_info info, size_t argc, napi_value* argv) {
+void checkParams_utilityTar(napi_env env, napi_callback_info info, size_t argc, napi_value* argv) {
     size_t temp = argc;// 保存应有的参数个数
     // 获取实际的参数个数和参数列表
-    catch_error_utar(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    catch_error_utilityTar(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
     if (argc != temp)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
@@ -56,25 +57,28 @@ napi_value un_tar_sync(napi_env env, napi_callback_info info) {
     size_t argc = 4;
     napi_value argv[4];
     size_t strLength;
-    checkParams_utar(env, info, argc, argv);// 检查参数个数    
+    checkParams_utilityTar(env, info, argc, argv);// 检查参数个数    
     // 获取参数
     // strFilePath
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    char strFilePath[++strLength];
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[0], strFilePath, strLength, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
+    char* strFilePath = (char*)malloc((++strLength) * sizeof(char));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[0], strFilePath, strLength, &strLength));
     // strFileName
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
-    char strFileName[++strLength];
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[1], strFileName, strLength, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
+    char* strFileName = (char*)malloc((++strLength) * sizeof(char));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[1], strFileName, strLength, &strLength));
     // strDesFilePath
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
-    char strDesFilePath[++strLength];
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[2], strDesFilePath, strLength, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
+    char* strDesFilePath = (char*)malloc((++strLength) * sizeof(char));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[2], strDesFilePath, strLength, &strLength));
     // 执行so函数
     int status = unTar(strFilePath, strFileName, strDesFilePath);
+    free(strFilePath);
+    free(strFileName);
+    free(strDesFilePath);
     // 转类型
     napi_value world;
-    catch_error_utar(env, napi_create_int32(env, status, &world));
+    catch_error_utilityTar(env, napi_create_int32(env, status, &world));
     // 回调函数
     napi_value* callbackParams = &world;
     size_t callbackArgc = 1;
@@ -101,25 +105,25 @@ typedef struct
     char* strFilePath;
     char* strFileName;
     char* strDesFilePath;
-} AddonData;
+} AddonData_unTar;
 
 /**
  * 本地代码中调用JavaScript编写的回调函数
 */
-void call_js_callback_utar(napi_env env, napi_value js_cb, void* context, void* data)
+ void call_js_callback_utilityTar(napi_env env, napi_value js_cb, void* context, void* data)
 {
     if (env != NULL)
     {
         // 获取异步线程返回的结果
         napi_value callBackInParams;
-        catch_error_utar(env, napi_create_int32(env, (int32_t)data, &callBackInParams));
+        catch_error_utilityTar(env, napi_create_int32(env, (int32_t)data, &callBackInParams));
 
         //获取global
         napi_value undefined;
-        catch_error_utar(env, napi_get_undefined(env, &undefined));
+        catch_error_utilityTar(env, napi_get_undefined(env, &undefined));
 
         //调用函数
-        catch_error_utar(env, napi_call_function(
+        catch_error_utilityTar(env, napi_call_function(
             env,
             undefined,   // js回调的this对象
             js_cb,       // js回调函数句柄
@@ -133,22 +137,22 @@ void call_js_callback_utar(napi_env env, napi_value js_cb, void* context, void* 
 /**
  * 执行线程
 */
-void execute_work_utar(napi_env env, void* data)
+ void execute_work_unTar(napi_env env, void* data)
 {
     // 传入进来的参数
-    AddonData* addon_data = (AddonData*)data;
+    AddonData_unTar* addon_data = (AddonData_unTar*)data;
     //获取js-callback函数
-    catch_error_utar(env, napi_acquire_threadsafe_function(addon_data->tsfn));
+    catch_error_utilityTar(env, napi_acquire_threadsafe_function(addon_data->tsfn));
     // 执行so函数
     int status = unTar(addon_data->strFilePath, addon_data->strFileName, addon_data->strDesFilePath);
     // 调用js-callback函数
-    catch_error_utar(env, napi_call_threadsafe_function(
+    catch_error_utilityTar(env, napi_call_threadsafe_function(
         addon_data->tsfn,                       // js-callback函数
-        status,                    // call_js_callback的第四个参数
+        status,                    // call_js_callback_utilityTar的第四个参数
         napi_tsfn_blocking             // 非阻塞模式调用
     ));
     //释放句柄
-    catch_error_utar(env, napi_release_threadsafe_function(
+    catch_error_utilityTar(env, napi_release_threadsafe_function(
         addon_data->tsfn,
         napi_tsfn_release
     ));
@@ -158,16 +162,16 @@ void execute_work_utar(napi_env env, void* data)
 /**
  * 执行线程完成
 */
-static void work_complete_utar(napi_env env, napi_status status, void* data)
+ void work_complete_unTar(napi_env env, napi_status status, void* data)
 {
-    AddonData* addon_data = (AddonData*)data;
+    AddonData_unTar* addon_data = (AddonData_unTar*)data;
     //释放句柄
-    catch_error_utar(env, napi_release_threadsafe_function(
+    catch_error_utilityTar(env, napi_release_threadsafe_function(
         addon_data->tsfn,
         napi_tsfn_release
     ));
     //回收任务
-    catch_error_utar(env, napi_delete_async_work(env, addon_data->work));
+    catch_error_utilityTar(env, napi_delete_async_work(env, addon_data->work));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
     // Linux上在这里释放地址会存在问题（在回调函数中将没有办法获取到这个值），但是Window上没有问题
@@ -177,38 +181,38 @@ static void work_complete_utar(napi_env env, napi_status status, void* data)
     free(addon_data);
 }
 
-napi_value un_tar(napi_env env, napi_callback_info info) {
+ napi_value un_tar(napi_env env, napi_callback_info info) {
     size_t argc = 4;
     napi_value argv[4];
     size_t strLength;
-    checkParams_utar(env, info, argc, argv);// 检查参数个数    
+    checkParams_utilityTar(env, info, argc, argv);// 检查参数个数    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
-    AddonData* addon_data = NULL;// 结构体    
-    addon_data = (AddonData*)malloc(sizeof(*addon_data));// 分配内存空间，在work_complete中会释放
+    AddonData_unTar* addon_data = NULL;// 结构体    
+    addon_data = (AddonData_unTar*)malloc(sizeof(*addon_data));// 分配内存空间，在work_complete_unTar中会释放
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
     // strFilePath
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
     addon_data->strFilePath = (char*)malloc((++strLength) * sizeof(char));
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[0], addon_data->strFilePath, strLength, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[0], addon_data->strFilePath, strLength, &strLength));
     // strFileName
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
     addon_data->strFileName = (char*)malloc((++strLength) * sizeof(char));
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[1], addon_data->strFileName, strLength, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[1], addon_data->strFileName, strLength, &strLength));
     // strDesFilePath
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
     addon_data->strDesFilePath = (char*)malloc((++strLength) * sizeof(char));
-    catch_error_utar(env, napi_get_value_string_utf8(env, argv[2], addon_data->strDesFilePath, strLength, &strLength));
+    catch_error_utilityTar(env, napi_get_value_string_utf8(env, argv[2], addon_data->strDesFilePath, strLength, &strLength));
     // 回调函数
     js_cb = argv[3];
 
     // 创建线程，异步执行
     // 创建线程名字
-    catch_error_utar(env, napi_create_string_utf8(
+    catch_error_utilityTar(env, napi_create_string_utf8(
         env,
-        "N-API Thread-safe Get UnTar Work Item",
+        "N-API Thread-safe UnTar Work Item",
         NAPI_AUTO_LENGTH,
         &work_name
     ));
@@ -218,7 +222,7 @@ napi_value un_tar(napi_env env, napi_callback_info info) {
     // napi_create_threadsafe_function函数作用：
     // 创建一个napi_value持久引用，该值包含可以从多个线程调用的JS函数，调用是异步的，这意味着调用
     // JS回调所用的值将被放置在队列中，对于队列中的每个值，最终将调用JS函数
-    catch_error_utar(env, napi_create_threadsafe_function(
+    catch_error_utilityTar(env, napi_create_threadsafe_function(
         env,
         js_cb,   //JS函数
         NULL,
@@ -228,36 +232,23 @@ napi_value un_tar(napi_env env, napi_callback_info info) {
         NULL,
         NULL,
         NULL,
-        call_js_callback_utar,
+        call_js_callback_utilityTar,
         &(addon_data->tsfn)   //调用napi_create_threadsafe_function创建的异步安全JS函数
     ));
 
     // 负责执行上面创建的函数
     // napi_create_async_work函数作用：
     // 分配用于异步执行逻辑的工作对象
-    catch_error_utar(env, napi_create_async_work(
+    catch_error_utilityTar(env, napi_create_async_work(
         env,
         NULL,
         work_name,
-        execute_work_utar,   // 被调用来执行异步逻辑的本地函数，给定的函数是从工作池调用，与主事件循环线程并行执行
-        work_complete_utar,  // 当异步逻辑完成或取消时被调用，在主事件循环线程中调用
+        execute_work_unTar,   // 被调用来执行异步逻辑的本地函数，给定的函数是从工作池调用，与主事件循环线程并行执行
+        work_complete_unTar,  // 当异步逻辑完成或取消时被调用，在主事件循环线程中调用
         addon_data,          // 用户提供的数据上下文。这将被传递回execute和complete函数
         &(addon_data->work)
     ));
     // 将线程放到待执行队列中
-    catch_error_utar(env, napi_queue_async_work(env, addon_data->work));
-
+    catch_error_utilityTar(env, napi_queue_async_work(env, addon_data->work));
     return NULL;
 }
-
-// napi_value init(napi_env env, napi_value exports)
-// {
-//     // unTar
-//     napi_property_descriptor unTar = DECLARE_NAPI_METHOD("unTar", un_tar);
-//     napi_property_descriptor unTarSync = DECLARE_NAPI_METHOD("unTarSync", un_tar_sync);    
-//     napi_define_properties(env, exports, 1, &unTar);
-//     napi_define_properties(env, exports, 1, &unTarSync);
-//     return exports;
-// }
-
-// NAPI_MODULE(NODE_GYP_MODULE_NAME, init);
