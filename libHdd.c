@@ -37,14 +37,40 @@ void catch_error_hdd(napi_env env, napi_status status) {
 /**
  * 参数个数检查
  */
-void checkParams_hdd(napi_env env, napi_callback_info info, size_t argc, napi_value* argv) {
+bool checkParams_hdd(napi_env env, napi_callback_info info, size_t argc, napi_value* argv, bool isAsync) {
+    bool rs = false;
+    napi_valuetype valueTypeLast; // 最后一个参数的类型
     size_t temp = argc;// 保存应有的参数个数
     // 获取实际的参数个数和参数列表
     catch_error_hdd(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    if (argc != temp)
-    {
-        napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    if (isAsync) {
+        // 异步调用，需包含回调函数
+        if (argc != temp)
+        {
+            napi_throw_error(env, "EINVAL", "Async call argument count mismatch.");
+            return rs;
+        }
+        napi_typeof(env, argv[argc - 1], &valueTypeLast);
+        if (valueTypeLast != napi_function) {
+            napi_throw_type_error(env, NULL, "Async call has not callback function.");
+            return rs;
+        }
+        rs = true;
     }
+    else {
+        // 同步调用
+        if (argc != temp && argc != temp - 1)
+        {
+            napi_throw_error(env, "EINVAL", "Sync call argument count mismatch");
+        }
+        if (argc == temp) {
+            napi_typeof(env, argv[argc - 1], &valueTypeLast);
+            if (valueTypeLast == napi_function) {
+                rs = true;
+            }
+        }
+    }
+    return rs;
 }
 
 /**
@@ -78,19 +104,21 @@ void call_js_callback_hdd(napi_env env, napi_value js_cb, void* context, void* d
 napi_value get_hdd_flag_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_hdd(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_hdd(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     int status = getHddFlag();
     // 转类型
     napi_value world;
     catch_error_hdd(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -155,7 +183,10 @@ void work_complete_getHddFlag(napi_env env, napi_status status, void* data)
 napi_value get_hdd_flag(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_hdd(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_hdd(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -216,7 +247,7 @@ napi_value get_hdd_flag(napi_env env, napi_callback_info info) {
 napi_value set_hdd_flag_sync(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    checkParams_hdd(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_hdd(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     // nResponse    
     int nResponse;
@@ -226,13 +257,15 @@ napi_value set_hdd_flag_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_hdd(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -298,8 +331,10 @@ void work_complete_setHddFlag(napi_env env, napi_status status, void* data)
 napi_value set_hdd_flag(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    //size_t strLength;
-    checkParams_hdd(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_hdd(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    

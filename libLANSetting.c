@@ -37,14 +37,40 @@ void catch_error_LANSetting(napi_env env, napi_status status) {
 /**
  * 参数个数检查
  */
-void checkParams_LANSetting(napi_env env, napi_callback_info info, size_t argc, napi_value* argv) {
+bool checkParams_LANSetting(napi_env env, napi_callback_info info, size_t argc, napi_value* argv, bool isAsync) {
+    bool rs = false;
+    napi_valuetype valueTypeLast; // 最后一个参数的类型
     size_t temp = argc;// 保存应有的参数个数
     // 获取实际的参数个数和参数列表
     catch_error_LANSetting(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    if (argc != temp)
-    {
-        napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    if (isAsync) {
+        // 异步调用，需包含回调函数
+        if (argc != temp)
+        {
+            napi_throw_error(env, "EINVAL", "Async call argument count mismatch.");
+            return rs;
+        }
+        napi_typeof(env, argv[argc - 1], &valueTypeLast);
+        if (valueTypeLast != napi_function) {
+            napi_throw_type_error(env, NULL, "Async call has not callback function.");
+            return rs;
+        }
+        rs = true;
     }
+    else {
+        // 同步调用
+        if (argc != temp && argc != temp - 1)
+        {
+            napi_throw_error(env, "EINVAL", "Sync call argument count mismatch");
+        }
+        if (argc == temp) {
+            napi_typeof(env, argv[argc - 1], &valueTypeLast);
+            if (valueTypeLast == napi_function) {
+                rs = true;
+            }
+        }
+    }
+    return rs;
 }
 
 /**
@@ -110,7 +136,7 @@ void call_js_callback_str_LANSetting(napi_env env, napi_value js_cb, void* conte
 napi_value set_LAN_setting_sync(napi_env env, napi_callback_info info) {
     size_t argc = 10;
     napi_value argv[10];
-	checkParams_LANSetting(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_LANSetting(env, info, argc, argv, false);// 检查参数个数    
 	// 获取参数
     size_t strLength;
 	//int isPermanent,
@@ -145,10 +171,8 @@ napi_value set_LAN_setting_sync(napi_env env, napi_callback_info info) {
 	//    int flagUpdateDaa
     int flagUpdateDaa;
     catch_error_LANSetting(env, napi_get_value_int32(env, argv[8], &flagUpdateDaa));
-    printf("start setLANSetting\n");
     // 执行so函数
     int status = setLANSetting(isPermanent, isDHCP, argIpAddress, argNetmask, argGateway, nDnsType, argDNS1, argDNS2, flagUpdateDaa);
-    printf("end setLANSetting\n");
     free(argIpAddress);
     free(argNetmask);
     free(argGateway);
@@ -157,13 +181,15 @@ napi_value set_LAN_setting_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_LANSetting(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[9], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[9], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -244,7 +270,10 @@ napi_value set_LAN_setting(napi_env env, napi_callback_info info) {
     size_t argc = 10;
     napi_value argv[10];
     size_t strLength;
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_LANSetting(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -332,19 +361,21 @@ napi_value set_LAN_setting(napi_env env, napi_callback_info info) {
 napi_value get_LAN_setting_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_LANSetting(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     char* status = getLANSetting();
     // 转类型
     napi_value world;
-    catch_error_LANSetting(env, napi_create_string_utf8(env, status, sizeof(char) * (strlen(status) + 1), &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    catch_error_LANSetting(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -411,7 +442,10 @@ void work_complete_getLANSetting(napi_env env, napi_status status, void* data)
 napi_value get_LAN_setting(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_LANSetting(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -480,7 +514,7 @@ napi_value get_LAN_setting(napi_env env, napi_callback_info info) {
 napi_value set_LAN_setting_ipv6_sync(napi_env env, napi_callback_info info) {
     size_t argc = 10;
     napi_value argv[10];
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_LANSetting(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     size_t strLength;
     //int isPermanent,
@@ -525,13 +559,15 @@ napi_value set_LAN_setting_ipv6_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_LANSetting(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[9], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[9], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -611,7 +647,10 @@ void work_complete_setLANSettingIpv6(napi_env env, napi_status status, void* dat
 napi_value set_LAN_setting_ipv6(napi_env env, napi_callback_info info) {
     size_t argc = 10;
     napi_value argv[10];
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_LANSetting(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -697,22 +736,24 @@ napi_value set_LAN_setting_ipv6(napi_env env, napi_callback_info info) {
 }
 
 //----char* getLANSettingIpv6();
-napi_value get_LAN_Setting_ipv6_sync(napi_env env, napi_callback_info info) {
+napi_value get_LAN_setting_ipv6_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_LANSetting(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     char* status = getLANSettingIpv6();
     // 转类型
     napi_value world;
-    catch_error_LANSetting(env, napi_create_string_utf8(env, status, sizeof(char) * (strlen(status) + 1), &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    catch_error_LANSetting(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -776,10 +817,13 @@ void work_complete_getLANSettingIpv6(napi_env env, napi_status status, void* dat
     free(addon_data);
 }
 
-napi_value get_LAN_Setting_ipv6(napi_env env, napi_callback_info info) {
+napi_value get_LAN_setting_ipv6(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_LANSetting(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_LANSetting(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    

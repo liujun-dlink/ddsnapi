@@ -122,12 +122,16 @@ void call_js_callback_get_datetime(napi_env env, napi_value js_cb, void* context
     napi_value world;
     catch_error_get_datetime(env, napi_create_string_utf8(env, time, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -176,6 +180,14 @@ void call_js_callback_get_datetime(napi_env env, napi_value js_cb, void* context
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
@@ -263,12 +275,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_string_utf8(env, time, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -370,6 +386,14 @@ void call_js_callback_get_timezone(napi_env env, napi_value js_cb, void* context
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -456,12 +480,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -563,6 +591,14 @@ void call_js_callback_get_daylight_saving(napi_env env, napi_value js_cb, void* 
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -649,12 +685,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -755,6 +795,14 @@ void call_js_callback_get_city_datetime(napi_env env, napi_value js_cb, void* co
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
@@ -863,12 +911,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[4], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[4], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[4], callbackArgc, callbackParams, &callbackRs);
+    }
     free(strServerAddress);
     free(strDatetime);
     return world;
@@ -971,6 +1023,14 @@ void call_js_callback_set_datetime(napi_env env, napi_value js_cb, void* context
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[4], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -986,10 +1046,10 @@ void call_js_callback_set_datetime(napi_env env, napi_value js_cb, void* context
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &addon_data->isPermanent));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &addon_data->enableNTPServer));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], NULL, NULL, &strLength));
-    addon_data->strServerAddress = (char*)malloc(sizeof(char) * (strLength + 1));
+    addon_data->strServerAddress = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[2], addon_data->strServerAddress, strLength, &strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
-    addon_data->strDatetime = (char*)malloc(sizeof(char) * (strLength +1));
+    addon_data->strDatetime = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[3], addon_data->strDatetime, strLength, &strLength));
     //strServerAddress
     //strDatetime
@@ -1080,12 +1140,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[2], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[2], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[2], callbackArgc, callbackParams, &callbackRs);
+    }
     free(strTimezone);
     return world;
 }
@@ -1181,6 +1245,14 @@ void call_js_callback_set_timezone(napi_env env, napi_value js_cb, void* context
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[2], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -1196,7 +1268,7 @@ void call_js_callback_set_timezone(napi_env env, napi_value js_cb, void* context
     addon_data->tsfn = NULL;
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[0], &addon_data->isPermanent));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], NULL, NULL, &strLength));
-    addon_data->strTimezone = (char*)malloc(sizeof(char) * (strLength + 1));
+    addon_data->strTimezone = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[1], addon_data->strTimezone, strLength, &strLength));
     //isPermanent
     int isPermanent;
@@ -1322,12 +1394,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[10], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[10], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[10], callbackArgc, callbackParams, &callbackRs);
+    }
     free(startTime);
     free(endTime);
     return world;
@@ -1426,6 +1502,14 @@ void call_js_callback_set_daylight_saving(napi_env env, napi_value js_cb, void* 
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[10], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -1446,13 +1530,13 @@ void call_js_callback_set_daylight_saving(napi_env env, napi_value js_cb, void* 
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[3], &addon_data->startWeek));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &addon_data->startDay));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], NULL, NULL, &strLength));
-    addon_data->startTime = (char*)malloc(sizeof(char) * (strLength +1));
+    addon_data->startTime = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[5], addon_data->startTime, strLength, &strLength));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[6], &addon_data->endMonth));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[7], &addon_data->endWeek));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &addon_data->endDay));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], NULL, NULL, &strLength));
-    addon_data->endTime = (char*)malloc(sizeof(char) * (strLength +1));
+    addon_data->endTime = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[9], addon_data->endTime, strLength, &strLength));
 
     // 把js函数变成任意线程都可以执行的函数
@@ -1580,12 +1664,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[11], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[11], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[11], callbackArgc, callbackParams, &callbackRs);
+    }
     free(strCityId);
     free(startTime);
     free(endTime);
@@ -1686,6 +1774,14 @@ void call_js_callback_set_city_datetime(napi_env env, napi_value js_cb, void* co
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[11], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -1701,7 +1797,7 @@ void call_js_callback_set_city_datetime(napi_env env, napi_value js_cb, void* co
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    addon_data->strCityId = (char*)malloc(sizeof(char) * (strLength + 1));
+    addon_data->strCityId = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], addon_data->strCityId, strLength, &strLength));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[1], &addon_data->isDstEnabled));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[2], &addon_data->offsetSeconds));
@@ -1709,13 +1805,13 @@ void call_js_callback_set_city_datetime(napi_env env, napi_value js_cb, void* co
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[4], &addon_data->startWeek));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[5], &addon_data->startDay));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], NULL, NULL, &strLength));
-    addon_data->startTime = (char*)malloc(sizeof(char) * (strLength + 1));
+    addon_data->startTime = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[6], addon_data->startTime, strLength, &strLength));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[7], &addon_data->endMonth));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[8], &addon_data->endWeek));
     catch_error_get_datetime(env, napi_get_value_int32(env, argv[9], &addon_data->endDay));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], NULL, NULL, &strLength));
-    addon_data->endTime = (char*)malloc(sizeof(char) * (strLength + 1));
+    addon_data->endTime = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[10], addon_data->endTime, strLength, &strLength));
 
     // 把js函数变成任意线程都可以执行的函数
@@ -1800,12 +1896,16 @@ typedef struct
     napi_value world;
     catch_error_get_datetime(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[1], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     free(strCityId);
     return world;
 }
@@ -1909,6 +2009,14 @@ void call_js_callback_get_city_dst(napi_env env, napi_value js_cb, void* context
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[1], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_get_datetime(env, napi_create_string_utf8(
         env,
@@ -1922,7 +2030,7 @@ void call_js_callback_get_city_dst(napi_env env, napi_value js_cb, void* context
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], NULL, NULL, &strLength));
-    addon_data->strCityId = (char*)malloc(sizeof(char) * (strLength +1));
+    addon_data->strCityId = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_get_datetime(env, napi_get_value_string_utf8(env, argv[0], addon_data->strCityId, strLength, &strLength));
     // 分配内存空间，在work_complete中会释放
     // 把js函数变成任意线程都可以执行的函数

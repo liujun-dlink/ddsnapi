@@ -123,12 +123,16 @@ void call_js_callback_get_hw_version(napi_env env, napi_value js_cb, void* conte
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, version, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -177,6 +181,14 @@ void call_js_callback_get_hw_version(napi_env env, napi_value js_cb, void* conte
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -320,12 +332,16 @@ void call_js_callback_get_nc_version(napi_env env, napi_value js_cb, void* conte
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, version, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -374,6 +390,14 @@ void call_js_callback_get_nc_version(napi_env env, napi_value js_cb, void* conte
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -517,12 +541,16 @@ void call_js_callback_get_fota_setting(napi_env env, napi_value js_cb, void* con
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -571,6 +599,14 @@ void call_js_callback_get_fota_setting(napi_env env, napi_value js_cb, void* con
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -714,12 +750,16 @@ void call_js_callback_get_firmware_version(napi_env env, napi_value js_cb, void*
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -768,6 +808,14 @@ void call_js_callback_get_firmware_version(napi_env env, napi_value js_cb, void*
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -910,12 +958,16 @@ void call_js_callback_get_firmware_version_full(napi_env env, napi_value js_cb, 
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -964,6 +1016,14 @@ void call_js_callback_get_firmware_version_full(napi_env env, napi_value js_cb, 
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -1106,12 +1166,16 @@ void call_js_callback_get_firmware_info(napi_env env, napi_value js_cb, void* co
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1160,6 +1224,14 @@ void call_js_callback_get_firmware_info(napi_env env, napi_value js_cb, void* co
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -1303,12 +1375,16 @@ void call_js_callback_get_device_uuid(napi_env env, napi_value js_cb, void* cont
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1357,6 +1433,14 @@ void call_js_callback_get_device_uuid(napi_env env, napi_value js_cb, void* cont
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -1494,12 +1578,16 @@ void call_js_callback_get_firmware_upgrade_status(napi_env env, napi_value js_cb
     napi_value world;
     catch_error_libDB(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1548,6 +1636,14 @@ void call_js_callback_get_firmware_upgrade_status(napi_env env, napi_value js_cb
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -1685,12 +1781,16 @@ void call_js_callback_get_fota_update_status(napi_env env, napi_value js_cb, voi
     napi_value world;
     catch_error_libDB(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1739,6 +1839,14 @@ void call_js_callback_get_fota_update_status(napi_env env, napi_value js_cb, voi
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -1896,12 +2004,17 @@ void call_js_callback_set_fota_setting(napi_env env, napi_value js_cb, void* con
     napi_value world;
     catch_error_libDB(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[5], callbackArgc, callbackParams, &callbackRs);
+    //回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[5], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[5], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1950,6 +2063,14 @@ void call_js_callback_set_fota_setting(napi_env env, napi_value js_cb, void* con
     if (argc != 6)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[5], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -2097,12 +2218,16 @@ void call_js_callback_set_fota_update_status(napi_env env, napi_value js_cb, voi
     napi_value world;
     catch_error_libDB(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[1], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -2151,6 +2276,14 @@ void call_js_callback_set_fota_update_status(napi_env env, napi_value js_cb, voi
     if (argc != 2)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[1], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     //nStatus
     // 分配内存空间，在work_complete中会释放
@@ -2294,12 +2427,16 @@ void call_js_callback_set_firmware_upgrade_status(napi_env env, napi_value js_cb
     napi_value world;
     catch_error_libDB(env, napi_create_int32(env, result, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[1], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -2348,6 +2485,14 @@ void call_js_callback_set_firmware_upgrade_status(napi_env env, napi_value js_cb
     if (argc != 2)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[1], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
@@ -2516,12 +2661,16 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     napi_value world;
     catch_error_libDB(env, napi_create_string_utf8(env, result, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[5], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[5], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[5], callbackArgc, callbackParams, &callbackRs);
+    }
     free(strFirmwareInfoFromFOTA);
     return world;
 }
@@ -2572,6 +2721,14 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[5], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
     // 创建线程名字
     catch_error_libDB(env, napi_create_string_utf8(
         env,
@@ -2589,7 +2746,7 @@ void call_js_callback_analyze_firmware_info(napi_env env, napi_value js_cb, void
     catch_error_libDB(env, napi_get_value_int32(env, argv[1], &addon_data->nMinor));
     catch_error_libDB(env, napi_get_value_int32(env, argv[2], &addon_data->nRev));
     catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], NULL, NULL, &strLength));
-    addon_data->strFirmwareInfoFromFOTA = (char*)malloc(sizeof(char) * (strLength + 1));
+    addon_data->strFirmwareInfoFromFOTA = (char*)malloc(sizeof(char) * (++strLength));
     catch_error_libDB(env, napi_get_value_string_utf8(env, argv[3], addon_data->strFirmwareInfoFromFOTA, strLength, &strLength));
     catch_error_libDB(env, napi_get_value_int32(env, argv[4], &addon_data->nUpdateBetaFw));
     //nMajor
