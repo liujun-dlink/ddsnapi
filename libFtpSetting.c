@@ -123,12 +123,16 @@ void call_js_callback_ftp_data(napi_env env, napi_value js_cb, void* context, vo
     napi_value world;
     catch_error_ftp_setting(env, napi_create_string_utf8(env, time, NAPI_AUTO_LENGTH, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -178,6 +182,14 @@ void call_js_callback_ftp_data(napi_env env, napi_value js_cb, void* context, vo
     if (argc != 1)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     // 创建线程名字
     catch_error_ftp_setting(env, napi_create_string_utf8(
@@ -287,12 +299,16 @@ typedef struct
     napi_value world;
     catch_error_ftp_setting(env, napi_create_int32(env, time, &world));
     //回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[4], callbackArgc, callbackParams, &callbackRs);
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[4], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[4], callbackArgc, callbackParams, &callbackRs);
+    }
     free(ftpServer);
     free(ftpUsername);
     free(ftpPassword);
@@ -392,6 +408,14 @@ void call_js_callback_set_ftp_data(napi_env env, napi_value js_cb, void* context
     if (argc != 5)
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    }
+    //判断是否存在回调函数
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[4], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
     }
     //获取参数
     // 分配内存空间，在work_complete中会释放

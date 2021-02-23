@@ -1,11 +1,8 @@
 // libSystem
 #include <node_api.h>
+#include <string.h>
+#include <stdlib.h>
 #include "libSystem.h"
-
-/*
- * 公开napi方法
- */
-//#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
 
 /*
  * 捕获异常
@@ -41,14 +38,40 @@ void catch_error_system(napi_env env, napi_status status) {
 /*
  * 参数个数检查
  */
-void checkParams_system(napi_env env, napi_callback_info info, size_t argc, napi_value* argv) {
+bool checkParams_system(napi_env env, napi_callback_info info, size_t argc, napi_value* argv, bool isAsync) {
+    bool rs = false;
+    napi_valuetype valueTypeLast; // 最后一个参数的类型
     size_t temp = argc;// 保存应有的参数个数
     // 获取实际的参数个数和参数列表
     catch_error_system(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    if (argc != temp)
-    {
-        napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    if (isAsync) {
+        // 异步调用，需包含回调函数
+        if (argc != temp)
+        {
+            napi_throw_error(env, "EINVAL", "Async call argument count mismatch.");
+            return rs;
+        }
+        napi_typeof(env, argv[argc - 1], &valueTypeLast);
+        if (valueTypeLast != napi_function) {
+            napi_throw_type_error(env, NULL, "Async call has not callback function.");
+            return rs;
+        }
+        rs = true;
     }
+    else {
+        // 同步调用
+        if (argc != temp && argc != temp - 1)
+        {
+            napi_throw_error(env, "EINVAL", "Sync call argument count mismatch");
+        }
+        if (argc == temp) {
+            napi_typeof(env, argv[argc - 1], &valueTypeLast);
+            if (valueTypeLast == napi_function) {
+                rs = true;
+            }
+        }
+    }
+    return rs;
 }
 
 //int runMdns();
@@ -58,19 +81,23 @@ napi_value get_fotaStatus_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
     size_t strLength;
-    checkParams_system(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_system(env, info, argc, argv, false);// 检查参数个数    
     // 执行so函数
+    //char* status = getFotaStatus();
     int status = getFotaStatus();
     // 转类型
     napi_value world;
+    //catch_error_system(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
     catch_error_system(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -127,7 +154,8 @@ static void execute_work_system(napi_env env, void* data)
     catch_error_system(env, napi_acquire_threadsafe_function(addon_data->tsfn));
     // 执行so函数
     int status = getFotaStatus();
-    //char* cbInParam = (char*)malloc(strlen(status));
+    //char* status = getFotaStatus();
+    //char* cbInParam = (char*)malloc(sizeof(char) * (strlen(status) + 1));
     //strcpy(cbInParam, status);
     // 调用js-callback函数
     catch_error_system(env, napi_call_threadsafe_function(
@@ -164,8 +192,10 @@ static void work_complete_system(napi_env env, napi_status status, void* data)
 napi_value get_fotaStatus(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    size_t strLength;
-    checkParams_system(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_system(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -218,21 +248,5 @@ napi_value get_fotaStatus(napi_env env, napi_callback_info info) {
     ));
     // 将线程放到待执行队列中
     catch_error_system(env, napi_queue_async_work(env, addon_data->work));
-    return napi_ok;
+    return NULL;
 }
-
-
-//int setFotaStatus(int nFotaStatus);
-
-
-//napi_value init(napi_env env, napi_value exports)
-//{
-    // getFotaStatus
-//    napi_property_descriptor getFotaStatus = DECLARE_NAPI_METHOD("getFotaStatus", get_fotaStatus);
-//    napi_property_descriptor getFotaStatusSync = DECLARE_NAPI_METHOD("getFotaStatusSync", get_fotaStatus_sync);
-//    napi_define_properties(env, exports, 1, &getFotaStatus);
-//    napi_define_properties(env, exports, 1, &getFotaStatusSync);
-//    return exports;
-//}
-
-//NAPI_MODULE(NODE_GYP_MODULE_NAME, init);

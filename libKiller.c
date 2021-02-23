@@ -1,37 +1,36 @@
-#include <node_api.h>
-#include <stdlib.h>
 #include "libKiller.h"
-
+#include "node_api.h"
+#include <stdlib.h>
 
 typedef struct
 {
     /**
-     * napi_async_workï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹ï¿½å£¬ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
-     * Í¨ï¿½ï¿½napi_create_async_workï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
-     * Í¨ï¿½ï¿½napi_delete_async_workÉ¾ï¿½ï¿½Êµï¿½ï¿½
+     * napi_async_workÊÇÒ»¸ö½á¹¹Ìå£¬ÓÃÓÚ¹ÜÀíÒì²½¹¤×÷Ïß³Ì
+     * Í¨¹ýnapi_create_async_work´´½¨ÊµÀý
+     * Í¨¹ýnapi_delete_async_workÉ¾³ýÊµÀý
     */
-    napi_async_work work;             // ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½ï¿½ï¿½
+    napi_async_work work;             // ±£´æÏß³ÌµÄÈÎÎñ
     /**
-     * napi_threadsafe_functionï¿½ï¿½Ò»ï¿½ï¿½Ö¸ï¿½ï¿½
-     * ï¿½ï¿½Ê¾ï¿½Ú¶ï¿½ï¿½ß³ï¿½ï¿½Ð¿ï¿½ï¿½ï¿½Í¨ï¿½ï¿½napi_call_threadsafe_functionï¿½ì²½ï¿½ï¿½ï¿½Ãµï¿½JSï¿½ï¿½ï¿½ï¿½
+     * napi_threadsafe_functionÊÇÒ»¸öÖ¸Õë
+     * ±íÊ¾ÔÚ¶àÏß³ÌÖÐ¿ÉÒÔÍ¨¹ýnapi_call_threadsafe_functionÒì²½µ÷ÓÃµÄJSº¯Êý
     */
-    napi_threadsafe_function tsfn;    // ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
-} AddonData;
+    napi_threadsafe_function tsfn;    // ±£´æ»Øµ÷º¯Êý
+} AddonData_killConsoles;
 
-void catch_error_killer(napi_env env, napi_status status) {
+void catch_error_killConsoles(napi_env env, napi_status status) {
     if (status != napi_ok)
     {
-        // napi_extended_error_infoï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+        // napi_extended_error_infoÊÇÒ»¸ö½á¹¹Ìå£¬°üº¬ÈçÏÂÐÅÏ¢
         /**
-         * error_messageï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ê¾
-         * engine_reservedï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½
-         * engine_error_codeï¿½ï¿½VMï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-         * error_codeï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½n-api×´Ì¬ï¿½ï¿½ï¿½ï¿½
+         * error_message£º´íÎóµÄÎÄ±¾±íÊ¾
+         * engine_reserved£º²»Í¸Ã÷ÊÖ±ú£¬½ö¹©ÒýÇæÊ¹ÓÃ
+         * engine_error_code£ºVMÌØ¶¨´íÎóÂë
+         * error_code£ºÉÏÒ»¸ö´íÎóµÄn-api×´Ì¬´úÂë
         */
         const napi_extended_error_info* error_info = NULL;
-        // ï¿½ï¿½È¡ï¿½ì³£ï¿½ï¿½Ï¢
+        // »ñÈ¡Òì³£ÐÅÏ¢
         napi_get_last_error_info(env, &error_info);
-        // ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½napi_valueï¿½ï¿½Ê¾ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+        // ´´½¨Ê¹ÓÃnapi_value±íÊ¾µÄ´íÎóÐÅÏ¢
         napi_value error_msg;
         napi_create_string_utf8(
             env,
@@ -39,66 +38,71 @@ void catch_error_killer(napi_env env, napi_status status) {
             NAPI_AUTO_LENGTH,
             &error_msg
         );
-        // ï¿½×³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½JSï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½uncaughtExceptionï¿½ì³£
+        // Å×³ö´íÎó£¬Ëü½«»áÔÚJS´¥·¢Ò»¸öuncaughtExceptionÒì³£
         napi_fatal_exception(env, error_msg);
-        // ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½
+        // ÍË³öºóÐøÖ´ÐÐ
         exit(0);
     }
 }
 
-void work_complete_killer(napi_env env, napi_status status, void* data) {
-    AddonData* addon_data = (AddonData*)data;
+void work_complete_killConsoles(napi_env env, napi_status status, void* data) {
+    AddonData_killConsoles* addon_data = (AddonData_killConsoles*)data;
 
-    //ï¿½Í·Å¾ï¿½ï¿½
-    catch_error_killer(env, napi_release_threadsafe_function(
+    //ÊÍ·Å¾ä±ú
+    catch_error_killConsoles(env, napi_release_threadsafe_function(
         addon_data->tsfn,
         napi_tsfn_release
     ));
 
-    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    catch_error_killer(env, napi_delete_async_work(
+    //»ØÊÕÈÎÎñ
+    catch_error_killConsoles(env, napi_delete_async_work(
         env, addon_data->work
     ));
 
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    // Linuxï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·Åµï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£¨ï¿½Ú»Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð½ï¿½Ã»ï¿½Ð°ì·¨ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Windowï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // LinuxÉÏÔÚÕâÀïÊÍ·ÅµØÖ·»á´æÔÚÎÊÌâ£¨ÔÚ»Øµ÷º¯ÊýÖÐ½«Ã»ÓÐ°ì·¨»ñÈ¡µ½Õâ¸öÖµ£©£¬µ«ÊÇWindowÉÏÃ»ÓÐÎÊÌâ
     //free(addon_data->libPath);
     free(addon_data);
 }
 
-void call_js_callback_killer(napi_env env, napi_value js_cb, void* context, void* data) {
+void call_js_callback_killConsoles(napi_env env, napi_value js_cb, void* context, void* data) {
     if (env != NULL)
     {
-        // ï¿½ï¿½È¡ï¿½ì²½ï¿½ß³Ì·ï¿½ï¿½ØµÄ½ï¿½ï¿½
+        // »ñÈ¡Òì²½Ïß³Ì·µ»ØµÄ½á¹û
         napi_value callBackInParams;
-        catch_error_killer(env, napi_create_int32(
+        catch_error_killConsoles(env, napi_create_int32(
             env,
             data,
             &callBackInParams
         ));
 
-        //ï¿½ï¿½È¡global
+        //»ñÈ¡global
         napi_value undefined;
-        catch_error_killer(env, napi_get_undefined(env, &undefined));
+        catch_error_killConsoles(env, napi_get_undefined(env, &undefined));
 
-        //ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½
-        catch_error_killer(env, napi_call_function(
+        //µ÷ÓÃº¯Êý
+        catch_error_killConsoles(env, napi_call_function(
             env,
-            undefined,   // jsï¿½Øµï¿½ï¿½ï¿½thisï¿½ï¿½ï¿½ï¿½
-            js_cb,       // jsï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            1,           // jsï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            &callBackInParams,        // jsï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            NULL         // jsï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½returnï¿½ï¿½ï¿½ï¿½ï¿½á±»resultï¿½ï¿½ï¿½Üµï¿½
+            undefined,   // js»Øµ÷µÄthis¶ÔÏó
+            js_cb,       // js»Øµ÷º¯Êý¾ä±ú
+            1,           // js»Øµ÷º¯Êý½ÓÊÜ²ÎÊý¸öÊý
+            &callBackInParams,        // js»Øµ÷º¯Êý²ÎÊýÊý×é
+            NULL         // js»Øµ÷º¯ÊýÖÐÈç¹ûÓÐreturn£¬½«»á±»result½ÓÊÜµ½
         ));
     }
+    //if (data != NULL)
+    //{
+        // ÊÍ·ÅÊý¾Ý
+    //    free(()data);
+    //}
 }
 
 napi_value kill_consoles_sync(napi_env env, napi_callback_info info) {
-    //ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
+    //»ñÈ¡²ÎÊý
     size_t argc = 1;
     napi_value argv[1];
-    catch_error_killer(env, napi_get_cb_info(
+    catch_error_killConsoles(env, napi_get_cb_info(
         env,
         info,
         &argc,
@@ -110,53 +114,57 @@ napi_value kill_consoles_sync(napi_env env, napi_callback_info info) {
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
-    //Ö´ï¿½ï¿½soï¿½ï¿½ï¿½ï¿½
+    //Ö´ÐÐsoº¯Êý
     int status = killConsoles();
-    //×ªï¿½ï¿½ï¿½ï¿½
+    //×ªÀàÐÍ
     napi_value world;
-    catch_error_killer(env, napi_create_int32(env, status, &world));
-    //ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    catch_error_killConsoles(env, napi_create_int32(env, status, &world));
+    //»Øµ÷º¯Êý
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+    if (valueTypeLast == napi_function) {
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
 /**
- * Ö´ï¿½ï¿½ï¿½ß³ï¿½
+ * Ö´ÐÐÏß³Ì
 */
-static void execute_work_killer(napi_env env, void* data)
+void execute_work_killConsoles(napi_env env, void* data)
 {
-    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½
-    AddonData* addon_data = (AddonData*)data;
-    //ï¿½ï¿½È¡js-callbackï¿½ï¿½ï¿½ï¿½
-   catch_error_killer(env, napi_acquire_threadsafe_function(addon_data->tsfn));
-    //Ö´ï¿½ï¿½soï¿½ï¿½ï¿½ï¿½
+    // ´«Èë½øÀ´µÄ²ÎÊý
+    AddonData_killConsoles* addon_data = (AddonData_killConsoles*)data;
+    //»ñÈ¡js-callbackº¯Êý
+   catch_error_killConsoles(env, napi_acquire_threadsafe_function(addon_data->tsfn));
+    //Ö´ÐÐsoº¯Êý
     int status = killConsoles();
-    // ï¿½ï¿½ï¿½ï¿½js-callbackï¿½ï¿½ï¿½ï¿½
-    catch_error_killer(env, napi_call_threadsafe_function(
-        addon_data->tsfn,                       // js-callbackï¿½ï¿½ï¿½ï¿½
-        status,                    // call_js_callbackï¿½Äµï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½
-        napi_tsfn_blocking             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½
+    // µ÷ÓÃjs-callbackº¯Êý
+    catch_error_killConsoles(env, napi_call_threadsafe_function(
+        addon_data->tsfn,                       // js-callbackº¯Êý
+        status,                    // call_js_callbackµÄµÚËÄ¸ö²ÎÊý
+        napi_tsfn_blocking             // ·Ç×èÈûÄ£Ê½µ÷ÓÃ
     ));
-    //ï¿½Í·Å¾ï¿½ï¿½
-    catch_error_killer(env, napi_release_threadsafe_function(
+    //ÊÍ·Å¾ä±ú
+    catch_error_killConsoles(env, napi_release_threadsafe_function(
         addon_data->tsfn,
-        napi_tsfn_release       //napi_tsfn_releaseÖ¸Ê¾ï¿½ï¿½Ç°ï¿½ß³Ì²ï¿½ï¿½Ùµï¿½ï¿½ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½napi_tsfn_abortÖ¸Ê¾ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ß³ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì²ï¿½Ó¦ï¿½Ùµï¿½ï¿½ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½ï¿½ï¿½
+        napi_tsfn_release       //napi_tsfn_releaseÖ¸Ê¾µ±Ç°Ïß³Ì²»ÔÙµ÷ÓÃÏß³Ì°²È«º¯Êý£¬napi_tsfn_abortÖ¸Ê¾³öµ±Ç°Ïß³ÌÍâ£¬ÆäËüÏß³Ì²»Ó¦ÔÙµ÷ÓÃÏß³Ì°²È«º¯Êý
     ));
 
 }
 
 napi_value kill_consoles(napi_env env, napi_callback_info info) {
-    // ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ¸øÏß³ÌÆðµÄÃû×Ö
     napi_value work_name;
-    //ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
+    //»ñÈ¡²ÎÊý
     size_t argc = 1;
     napi_value argv[1];
-    catch_error_killer(env, napi_get_cb_info(
+    catch_error_killConsoles(env, napi_get_cb_info(
         env,
         info,
         &argc,
@@ -168,97 +176,105 @@ napi_value kill_consoles(napi_env env, napi_callback_info info) {
     {
         napi_throw_error(env, "EINVAL", "Argument count mismatch");
     }
-    // ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½
-    catch_error_killer(env, napi_create_string_utf8(
+    //ÅÐ¶ÏÊÇ·ñ´æÔÚ»Øµ÷º¯Êý
+    napi_valuetype valueTypeLast;
+    napi_typeof(env, argv[0], &valueTypeLast);
+
+    if (valueTypeLast != napi_function) {
+        napi_throw_type_error(env, NULL, "Wrong arguments");
+        return NULL;
+    }
+    // ´´½¨Ïß³ÌÃû×Ö
+    catch_error_killConsoles(env, napi_create_string_utf8(
         env,
         "N-API Thread-safe Get Performancen Work Item",
         NAPI_AUTO_LENGTH,
         &work_name
     ));
-    // ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Õ¼ä£¬ï¿½ï¿½work_completeï¿½Ð»ï¿½ï¿½Í·ï¿½
-    AddonData* addon_data = (AddonData*)malloc(sizeof(*addon_data));
+    // ·ÖÅäÄÚ´æ¿Õ¼ä£¬ÔÚwork_completeÖÐ»áÊÍ·Å
+    AddonData_killConsoles* addon_data = (AddonData_killConsoles*)malloc(sizeof(*addon_data));
     addon_data->work = NULL;
     addon_data->tsfn = NULL;
-    // ï¿½ï¿½jsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ÐµÄºï¿½ï¿½ï¿½
-    // ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    // napi_create_threadsafe_functionï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
-    // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½napi_valueï¿½Ö¾ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ó¶ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½Ãµï¿½JSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì²½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Î¶ï¿½Åµï¿½ï¿½ï¿½
-    // JSï¿½Øµï¿½ï¿½ï¿½ï¿½Ãµï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Ðµï¿½Ã¿ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Õ½ï¿½ï¿½ï¿½ï¿½ï¿½JSï¿½ï¿½ï¿½ï¿½
-   catch_error_killer(env, napi_create_threadsafe_function(
+    // °Ñjsº¯Êý±ä³ÉÈÎÒâÏß³Ì¶¼¿ÉÒÔÖ´ÐÐµÄº¯Êý
+    // ÕâÑù¾Í¿ÉÒÔÔÚ¿ª³öÀ´µÄ×ÓÏß³ÌÖÐµ÷ÓÃËüÁË
+    // napi_create_threadsafe_functionº¯Êý×÷ÓÃ£º
+    // ´´½¨Ò»¸önapi_value³Ö¾ÃÒýÓÃ£¬¸ÃÖµ°üº¬¿ÉÒÔ´Ó¶à¸öÏß³Ìµ÷ÓÃµÄJSº¯Êý£¬µ÷ÓÃÊÇÒì²½µÄ£¬ÕâÒâÎ¶×Åµ÷ÓÃ
+    // JS»Øµ÷ËùÓÃµÄÖµ½«±»·ÅÖÃÔÚ¶ÓÁÐÖÐ£¬¶ÔÓÚ¶ÓÁÐÖÐµÄÃ¿¸öÖµ£¬×îÖÕ½«µ÷ÓÃJSº¯Êý
+   catch_error_killConsoles(env, napi_create_threadsafe_function(
         env,
-        argv[0],   //JSï¿½ï¿½ï¿½ï¿½
+        argv[0],   //JSº¯Êý
         NULL,
         work_name,
-        5,
+        1,
         1,
         NULL,
         NULL,
         NULL,
-        call_js_callback_killer,
-        &(addon_data->tsfn)   //ï¿½ï¿½ï¿½ï¿½napi_create_threadsafe_functionï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì²½ï¿½ï¿½È«JSï¿½ï¿½ï¿½ï¿½
+        call_js_callback_killConsoles,
+        &(addon_data->tsfn)   //µ÷ÓÃnapi_create_threadsafe_function´´½¨µÄÒì²½°²È«JSº¯Êý
     ));
-    // ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½
-   // napi_create_async_workï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
-    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì²½Ö´ï¿½ï¿½ï¿½ß¼ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    catch_error_killer(env, napi_create_async_work(
+    // ¸ºÔðÖ´ÐÐÉÏÃæ´´½¨µÄº¯Êý
+   // napi_create_async_workº¯Êý×÷ÓÃ£º
+    // ·ÖÅäÓÃÓÚÒì²½Ö´ÐÐÂß¼­µÄ¹¤×÷¶ÔÏó
+    catch_error_killConsoles(env, napi_create_async_work(
         env,
         NULL,
         work_name,
-        execute_work_killer,   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ì²½ï¿½ß¼ï¿½ï¿½Ä±ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ï¿½Ç´Ó¹ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Ñ­ï¿½ï¿½ï¿½ß³Ì²ï¿½ï¿½ï¿½Ö´ï¿½ï¿½
-        work_complete_killer,  // ï¿½ï¿½ï¿½ì²½ï¿½ß¼ï¿½ï¿½ï¿½É»ï¿½È¡ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Ñ­ï¿½ï¿½ï¿½ß³ï¿½ï¿½Ðµï¿½ï¿½ï¿½
-        addon_data,          // ï¿½Ã»ï¿½ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½â½«ï¿½ï¿½ï¿½ï¿½ï¿½Ý»ï¿½executeï¿½ï¿½completeï¿½ï¿½ï¿½ï¿½
+        execute_work_killConsoles,   // ±»µ÷ÓÃÀ´Ö´ÐÐÒì²½Âß¼­µÄ±¾µØº¯Êý£¬¸ø¶¨µÄº¯ÊýÊÇ´Ó¹¤×÷³Øµ÷ÓÃ£¬ÓëÖ÷ÊÂ¼þÑ­»·Ïß³Ì²¢ÐÐÖ´ÐÐ
+        work_complete_killConsoles,  // µ±Òì²½Âß¼­Íê³É»òÈ¡ÏûÊ±±»µ÷ÓÃ£¬ÔÚÖ÷ÊÂ¼þÑ­»·Ïß³ÌÖÐµ÷ÓÃ
+        addon_data,          // ÓÃ»§Ìá¹©µÄÊý¾ÝÉÏÏÂÎÄ¡£Õâ½«±»´«µÝ»ØexecuteºÍcompleteº¯Êý
         &(addon_data->work)
     ));
-    // ï¿½ï¿½ï¿½ß³Ì·Åµï¿½ï¿½ï¿½Ö´ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
-    catch_error_killer(env, napi_queue_async_work(
+    // ½«Ïß³Ì·Åµ½´ýÖ´ÐÐ¶ÓÁÐÖÐ
+    catch_error_killConsoles(env, napi_queue_async_work(
         env,
-        addon_data->work   //ÒªÖ´ï¿½ï¿½ï¿½ß³ÌµÄ¾ï¿½ï¿½
+        addon_data->work   //ÒªÖ´ÐÐÏß³ÌµÄ¾ä±ú
     ));
     return NULL;
 }
+/*
+napi_value init(napi_env env, napi_value exports)
+{
 
-// napi_value init(napi_env env, napi_value exports)
-// {
+    // »ñÈ¡ÐÔÄÜÊý¾Ý
+    napi_property_descriptor killConsolesSync = {
+        "killConsolesSync",
+        NULL,
+        kill_consoles_sync,
+        NULL,
+        NULL,
+        NULL,
+        napi_default,
+        NULL
+    };
+    //±©Â¶½Ó¿Ú
+    napi_define_properties(
+        env,
+        exports,
+        1,
+        &killConsolesSync
+    );
 
-//     // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-//     napi_property_descriptor killConsolesSync = {
-//         "killConsolesSync",
-//         NULL,
-//         kill_consoles_sync,
-//         NULL,
-//         NULL,
-//         NULL,
-//         napi_default,
-//         NULL
-//     };
-//     //ï¿½ï¿½Â¶ï¿½Ó¿ï¿½
-//     napi_define_properties(
-//         env,
-//         exports,
-//         1,
-//         &killConsolesSync
-//     );
+    // »ñÈ¡ÐÔÄÜÊý¾Ý
+    napi_property_descriptor killConsoles = {
+        "killConsoles",
+        NULL,
+        kill_consoles,
+        NULL,
+        NULL,
+        NULL,
+        napi_default,
+        NULL
+    };
+    //±©Â¶½Ó¿Ú
+    napi_define_properties(
+        env,
+        exports,
+        1,
+        &killConsoles
+    );
 
-//     // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-//     napi_property_descriptor killConsoles = {
-//         "killConsoles",
-//         NULL,
-//         kill_consoles,
-//         NULL,
-//         NULL,
-//         NULL,
-//         napi_default,
-//         NULL
-//     };
-//     //ï¿½ï¿½Â¶ï¿½Ó¿ï¿½
-//     napi_define_properties(
-//         env,
-//         exports,
-//         1,
-//         &killConsoles
-//     );
+    return exports;
+}
 
-//     return exports;
-// }
-
-// NAPI_MODULE(NODE_GYP_MODULE_NAME, init);
+NAPI_MODULE(NODE_GYP_MODULE_NAME, init);*/

@@ -36,16 +36,42 @@ void catch_error_cli(napi_env env, napi_status status) {
 }
 
 /**
- * 参数个数检查
+ * 参数个数检查, 并判断是否包含回调函数
  */
-void checkParams_cli(napi_env env, napi_callback_info info, size_t argc, napi_value* argv) {
+bool checkParams_cli(napi_env env, napi_callback_info info, size_t argc, napi_value* argv, bool isAsync) {
+    bool rs = false;
+    napi_valuetype valueTypeLast; // 最后一个参数的类型
     size_t temp = argc;// 保存应有的参数个数
     // 获取实际的参数个数和参数列表
     catch_error_cli(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    if (argc != temp)
-    {
-        napi_throw_error(env, "EINVAL", "Argument count mismatch");
+    if (isAsync) {
+        // 异步调用，需包含回调函数
+        if (argc != temp)
+        {            
+            napi_throw_error(env, "EINVAL", "Async call argument count mismatch.");
+            return rs;
+        }
+        napi_typeof(env, argv[argc - 1], &valueTypeLast);
+        if (valueTypeLast != napi_function) {
+            napi_throw_type_error(env, NULL, "Async call has not callback function.");
+            return rs;
+        }
+        rs = true;
     }
+    else {
+        // 同步调用
+        if (argc != temp && argc != temp - 1)
+        {
+            napi_throw_error(env, "EINVAL", "Sync call argument count mismatch");
+        }
+        if (argc == temp) {
+            napi_typeof(env, argv[argc - 1], &valueTypeLast);
+            if (valueTypeLast == napi_function) {
+                rs = true;
+            }
+        }    
+    }
+    return rs;
 }
 
 /**
@@ -111,20 +137,22 @@ void call_js_callback_str_cli(napi_env env, napi_value js_cb, void* context, voi
 napi_value get_system_info_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     char* status = getSystemInfo();
     // 转类型
     napi_value world;
-    catch_error_cli(env, napi_create_string_utf8(env, status, sizeof(char) * (strlen(status) + 1), &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
-    return NULL;
+    catch_error_cli(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[argc - 1], callbackArgc, callbackParams, &callbackRs);
+    }
+    return world;
 }
 
 typedef struct
@@ -190,7 +218,10 @@ void work_complete_getSystemInfo(napi_env env, napi_status status, void* data)
 napi_value get_system_info(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -250,7 +281,7 @@ napi_value get_system_info(napi_env env, napi_callback_info info) {
 napi_value set_admin_password_sync(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     size_t strLength;
     // password    
@@ -263,13 +294,15 @@ napi_value set_admin_password_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -336,7 +369,10 @@ napi_value set_admin_password(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
     size_t strLength;
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -400,19 +436,21 @@ napi_value set_admin_password(napi_env env, napi_callback_info info) {
 napi_value cli_save_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     int status = save();
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -477,7 +515,10 @@ void work_complete_cli_save(napi_env env, napi_status status, void* data)
 napi_value cli_save(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }   
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -537,19 +578,21 @@ napi_value cli_save(napi_env env, napi_callback_info info) {
 napi_value get_device_name_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     char* status = getDeviceName();
     // 转类型
     napi_value world;
-    catch_error_cli(env, napi_create_string_utf8(env, status, sizeof(char) * (strlen(status) + 1), &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    catch_error_cli(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -616,7 +659,10 @@ void work_complete_getDeviceName(napi_env env, napi_status status, void* data)
 napi_value get_device_name(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -676,7 +722,7 @@ napi_value get_device_name(napi_env env, napi_callback_info info) {
 napi_value set_device_name_sync(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     size_t strLength;
     // strDeviceName    
@@ -689,13 +735,15 @@ napi_value set_device_name_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -762,7 +810,10 @@ napi_value set_device_name(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
     size_t strLength;
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }   
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -826,19 +877,21 @@ napi_value set_device_name(napi_env env, napi_callback_info info) {
 napi_value get_performance_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     char* status = getPerformance();
     // 转类型
     napi_value world;
-    catch_error_cli(env, napi_create_string_utf8(env, status, sizeof(char) * (strlen(status) + 1), &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    catch_error_cli(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -905,8 +958,12 @@ void work_complete_getPerformance(napi_env env, napi_status status, void* data)
 napi_value get_performance(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
-    // 获取参数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }
+
+	// 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
     AddonData_getPerformance* addon_data = NULL;// 结构体    
@@ -965,19 +1022,21 @@ napi_value get_performance(napi_env env, napi_callback_info info) {
 napi_value get_web_access_port_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     int status = getWebAccessPort();
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1041,7 +1100,10 @@ void work_complete_getWebAccessPort(napi_env env, napi_status status, void* data
 napi_value get_web_access_port(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -1101,7 +1163,7 @@ napi_value get_web_access_port(napi_env env, napi_callback_info info) {
 napi_value set_web_access_port_sync(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     // nPortNumber    
     int nPortNumber;
@@ -1111,13 +1173,15 @@ napi_value set_web_access_port_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1183,7 +1247,10 @@ napi_value set_web_access_port(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
     size_t strLength;
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -1245,19 +1312,21 @@ napi_value set_web_access_port(napi_env env, napi_callback_info info) {
 napi_value get_nginx_access_port_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     int status = getNginxAccessPort();
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1321,7 +1390,10 @@ void work_complete_getNginxAccessPort(napi_env env, napi_status status, void* da
 napi_value get_nginx_access_port(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -1381,7 +1453,7 @@ napi_value get_nginx_access_port(napi_env env, napi_callback_info info) {
 napi_value set_nginx_access_port_sync(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     // nPortNumber    
     int nPortNumber;
@@ -1392,13 +1464,15 @@ napi_value set_nginx_access_port_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1464,7 +1538,10 @@ napi_value set_nginx_access_port(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
     size_t strLength;
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -1526,19 +1603,21 @@ napi_value set_nginx_access_port(napi_env env, napi_callback_info info) {
 napi_value get_nvr_version_sync(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数
     // 执行so函数
     char* status = getNvrVersion();
     // 转类型
     napi_value world;
-    catch_error_cli(env, napi_create_string_utf8(env, status, sizeof(char) * (strlen(status) + 1), &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    catch_error_cli(env, napi_create_string_utf8(env, status, NAPI_AUTO_LENGTH, &world));
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[0], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1605,7 +1684,10 @@ void work_complete_getNvrVersion(napi_env env, napi_status status, void* data)
 napi_value get_nvr_version(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
@@ -1665,7 +1747,7 @@ napi_value get_nvr_version(napi_env env, napi_callback_info info) {
 napi_value set_MAC_address_sync(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    bool has_callback = checkParams_cli(env, info, argc, argv, false);// 检查参数个数    
     // 获取参数
     size_t strLength;
     // macAddress    
@@ -1678,13 +1760,15 @@ napi_value set_MAC_address_sync(napi_env env, napi_callback_info info) {
     // 转类型
     napi_value world;
     catch_error_cli(env, napi_create_int32(env, status, &world));
-    // 回调函数
-    napi_value* callbackParams = &world;
-    size_t callbackArgc = 1;
-    napi_value global;
-    napi_get_global(env, &global);
-    napi_value callbackRs;
-    napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    if (has_callback) {
+        // 回调函数
+        napi_value* callbackParams = &world;
+        size_t callbackArgc = 1;
+        napi_value global;
+        napi_get_global(env, &global);
+        napi_value callbackRs;
+        napi_call_function(env, global, argv[1], callbackArgc, callbackParams, &callbackRs);
+    }
     return world;
 }
 
@@ -1751,7 +1835,10 @@ napi_value set_MAC_address(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
     size_t strLength;
-    checkParams_cli(env, info, argc, argv);// 检查参数个数    
+    // 检查参数个数
+    if (!checkParams_cli(env, info, argc, argv, true)) {
+        return NULL;
+    }    
     // 获取参数    
     napi_value js_cb;// 回调函数    
     napi_value work_name;// 给线程起的名字    
