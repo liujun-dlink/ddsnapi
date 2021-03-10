@@ -43,8 +43,8 @@
     "sources": [
       "dds-napi.c",
       "dds-napi-common.c",
-		  "libUptime.c",
-		  "libKiller.c",
+	  "libUptime.c",
+	  "libKiller.c",
       "libUtilityTar.c",
       "libSystem.c",
       "libLed.c",
@@ -58,13 +58,13 @@
       "libFWValidate.c",
       "libLANSetting.c"
     ],
-	  "cflags!": [
-		  "-fno-exceptions"
+	"cflags!": [
+	  "-fno-exceptions"
     ],
     "cflags_cc!": [
-		  "-fno-exceptions"
+	  "-fno-exceptions"
     ],
-	  "xcode_settings": {
+	"xcode_settings": {
       'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
       'CLANG_CXX_LIBRARY': 'libc++',
       'MACOSX_DEPLOYMENT_TARGET': '10.7'
@@ -102,6 +102,6 @@
           }
         }
       ]
-	  ]
+	]
   }]
 }
