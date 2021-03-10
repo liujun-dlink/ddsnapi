@@ -8,7 +8,7 @@
 
 //int runDnssd();
 
-char* getFotaStatus(void);
+int getFotaStatus(void);
 
 //int setFotaStatus(int nFotaStatus);
 
