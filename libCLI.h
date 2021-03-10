@@ -8,7 +8,7 @@ char* getSystemInfo();
 
 int setAdminPassword(char* password);
 
-int save();
+//int save();
 
 char* getDeviceName();
 
@@ -26,6 +26,6 @@ int setNginxAccessPort(int nPortNumber);
 
 char* getNvrVersion();
 
-int setMACAddress(char* macAddress);
+//int setMACAddress(char* macAddress);
 
 #endif
