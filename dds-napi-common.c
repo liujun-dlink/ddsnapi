@@ -1,5 +1,11 @@
 #include "dds-napi-common.h"
-#include <dlfcn.h>
+
+//根据操作系统环境决定使用哪一个
+#if (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64)
+    #include "win32-dlfcn.h"
+#else
+    #include <dlfcn.h>
+#endif
 
 
 void *dlopen(const char *pathname, int mode)
